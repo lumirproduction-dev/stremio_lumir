@@ -58,6 +58,8 @@ function setCache(key, data) {
 
 async function fetchProxy(url) {
 
+ 
+
   const cached = getCache(url);
   if (cached) return cached;
 
@@ -81,6 +83,10 @@ async function fetchProxy(url) {
         try { data = JSON.parse(data); } catch {}
       }
 
+      if (!data || typeof data !== "object") {
+        throw new Error("Invalid API response");
+      }
+
       setCache(url, data);
 
       return data;
@@ -94,9 +100,7 @@ async function fetchProxy(url) {
   }
 
   throw new Error("All proxies failed");
-
 }
-
 
 // ---------------- CATALOG ----------------
 
@@ -113,13 +117,13 @@ builder.defineCatalogHandler(async ({ extra }) => {
 
     const data = await fetchProxy(apiUrl);
 
-    const results = data.results || [];
+    const results = data.items || [];
 
     const metas = results.slice(0, 30).map(v => ({
       id: `pokusne_${v.id}`,
       type: "movie",
       name: v.title,
-      poster: v.thumbnail
+      poster: v.thumbs?.[0] || ""
     }));
 
     console.log("CATALOG RESULTS:", metas.length);
